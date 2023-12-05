@@ -44,12 +44,12 @@ void Odometry(){
   Delta_x=Delta_A*cos(Delta_null);
   Delta_y=Delta_A*sin(Delta_null);
   
-  Serial.print("Left_Rotation: ");
+  /*Serial.print("Left_Rotation: ");
   Serial.println(Left_Rotation);
   Serial.print("Right_Rotation: ");
   Serial.println(Right_Rotation);
   Serial.print("L_Distance: ");
   Serial.println(L_Distance);
   Serial.print("R_Distance: ");
-  Serial.println(R_Distance);
+  Serial.println(R_Distance);*/
 }
