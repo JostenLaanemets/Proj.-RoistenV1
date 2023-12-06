@@ -15,9 +15,11 @@ float Delta_x = 0;
 float Delta_y=0;
 
 
-
+//ratta raadius
 float wheel_radius = 0.125;
+//ratta vaheline kaugus
 float L= 0.52;
+//Halli anduri täisring
 int ticks_per_revolution = 15;
 
 void Odometry(){

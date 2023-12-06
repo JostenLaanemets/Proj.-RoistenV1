@@ -9,11 +9,9 @@ HardwareSerial& debugSerial = Serial;
 int channel1 = 0;
 int channel3 = 0;
 int channel5 = 0;
-int channel6 = 0;
-int channel7 = 0;
-//ODOMEETRIA
+
 ros::NodeHandle nh;
-//15 tick on t2isring
+
 float d = 0.25;
 
 float vel_left = 0;
@@ -35,8 +33,7 @@ void CmdVelCallback( const geometry_msgs::Twist& velocity){
   vel_left = velocity.linear.x - d * velocity.angular.z;
   vel_right = velocity.linear.x + d * velocity.angular.z;
   
-  //digitalWrite(1,LOW);
-  /*if (vel_right < 0.0)
+  if (vel_right < 0.0)
   {
     vel_right = vel_right * (-1);
     digitalWrite(Right_Reverse,LOW);
@@ -52,24 +49,23 @@ void CmdVelCallback( const geometry_msgs::Twist& velocity){
   }
   if (vel_right == 0.0 & vel_left == 0.0)
   {
-    digitalWrite(2,LOW);
-    digitalWrite(3,LOW);
+    digitalWrite(Right_Brake,LOW);
+    digitalWrite(Left_Brake,LOW);
   }else{
-    digitalWrite(2,HIGH);
-    digitalWrite(3,HIGH);
-  }*/
+    digitalWrite(Right_Brake,HIGH);
+    digitalWrite(Left_Brake,HIGH);
+  }
   delay(10);
   
-  analogWrite(6,vel_left);
-  analogWrite(7,vel_right);
+  analogWrite(6,vel_left*0.79);
+  analogWrite(7,vel_right*0.60);
 }
 
 void RemoteControl(){
   channel3 = readChannel(2, -100, 100, 0);
   channel1 = readChannel(0, -100, 100, 0);
   channel5 = readChannel(4, -100, 100, 0);
-  channel6 = readChannel(6, -100, 100, 0);
-  channel7 = readChannel(7, -100, 100, 0);
+
 
   vel_left = channel3 + channel1+1;
   vel_right = channel3 - channel1+1;
@@ -110,8 +106,8 @@ void RemoteControl(){
 
       delay(10);
 
-      analogWrite(6,vel_left*0.5);
-      analogWrite(7,vel_right*0.5);
+      analogWrite(6,vel_left*0.79);
+      analogWrite(7,vel_right*0.60);
   }
   
 }
