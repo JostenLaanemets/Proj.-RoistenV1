@@ -2,142 +2,164 @@
 #include <ros.h>
 #include <geometry_msgs/Twist.h>
 #define PI 3.1415926535897932384626433832795
+
 //IBUS
 IBusBM ibusRC;
 HardwareSerial& ibusRcSerial = Serial1;
 HardwareSerial& debugSerial = Serial;
+
+// Declare channels
 int channel1 = 0;
 int channel3 = 0;
 int channel5 = 0;
 
+// Start the node
 ros::NodeHandle nh;
 
-float d = 0.25;
+float d = 0.25;       // d = Wheel diameter
+float velLeft = 0;
+float velRight = 0;
 
-float vel_left = 0;
-float vel_right = 0;
+// Define HALL pins
+const int hallRightPin = 4;
+const int hallLeftPin = 5;
 
-const int Hall_Right_PIN = 4;
-const int Hall_Left_PIN = 5;
+// Define braking pins
+const int rightBrake = 2;
+const int leftBrake = 3;
 
-const int Right_Brake = 2;
-const int Left_Brake = 3;
+// Define reversing pins
+const int rightReverse = A0;
+const int leftReverse = A1;
 
-const int Right_Reverse = A0;
-const int Left_Reverse = A1;
+int previousStateRight = LOW;
+int previousStateLeft = LOW;
 
-int previousState_Right = LOW;
-int previousState_Left = LOW;
-void CmdVelCallback( const geometry_msgs::Twist& velocity){
+float maxSpeed=0.7;
 
-  vel_left = velocity.linear.x - d * velocity.angular.z;
-  vel_right = velocity.linear.x + d * velocity.angular.z;
+void CmdVelCallback( const geometry_msgs::Twist& velocity)
+{
+  velLeft = velocity.linear.x - d * velocity.angular.z;
+  velRight = velocity.linear.x + d * velocity.angular.z;
   
-  if (vel_right < 0.0)
+  // Reverse and brake logic
+  if (velRight < 0.0)
   {
-    vel_right = vel_right * (-1);
-    digitalWrite(Right_Reverse,LOW);
-  }else{
-    digitalWrite(Right_Reverse,HIGH);
-  }
-  if (vel_left < 0.0)
+    velRight = velRight * (-1);
+    digitalWrite(rightReverse, LOW);
+  }else
   {
-    vel_left = vel_left * (-1);
-    digitalWrite(Left_Reverse,LOW);
-  }else{
-    digitalWrite(Left_Reverse,HIGH);
+    digitalWrite(rightReverse, HIGH);
   }
-  if (vel_right == 0.0 & vel_left == 0.0)
+
+  if (velLeft < 0.0)
   {
-    digitalWrite(Right_Brake,LOW);
-    digitalWrite(Left_Brake,LOW);
-  }else{
-    digitalWrite(Right_Brake,HIGH);
-    digitalWrite(Left_Brake,HIGH);
+    velLeft = velLeft * (-1);
+    digitalWrite(leftReverse, LOW);
+  }else
+  {
+    digitalWrite(leftReverse, HIGH);
   }
+
+  if (velRight == 0.0 && velLeft == 0.0)
+  {
+    digitalWrite(rightBrake, LOW);
+    digitalWrite(leftBrake, LOW);
+  }else
+  {
+    digitalWrite(rightBrake, HIGH);
+    digitalWrite(leftBrake, HIGH);
+  }
+
   delay(10);
-  
-  analogWrite(6,vel_left*0.79);
-  analogWrite(7,vel_right*0.60);
+  analogWrite(6, velLeft * maxSpeed);
+  analogWrite(7 ,velRight * maxSpeed);
 }
 
-void RemoteControl(){
+void RemoteControl()
+{
   channel3 = readChannel(2, -100, 100, 0);
   channel1 = readChannel(0, -100, 100, 0);
   channel5 = readChannel(4, -100, 100, 0);
 
+  velLeft = channel3 + channel1+1;
+  velRight = channel3 - channel1+1;
 
-  vel_left = channel3 + channel1+1;
-  vel_right = channel3 - channel1+1;
-  // Serial.println(vel_left);
-  // Serial.println(vel_right);
   if (channel5 == 100)
   {
     nh.spinOnce();
-  }else if (channel5 == 0){
-    digitalWrite(Right_Brake,LOW);
-    digitalWrite(Left_Brake,LOW);
-  }else{
-    digitalWrite(Right_Brake,HIGH);
-    digitalWrite(Left_Brake,HIGH);
-    if (vel_right < 0.0)
+  }else if (channel5 == 0)
+  {
+    digitalWrite(rightBrake,LOW);
+    digitalWrite(leftBrake,LOW);
+  }else
+  {
+    digitalWrite(rightBrake,HIGH);
+    digitalWrite(leftBrake,HIGH);
+    if (velRight < 0.0)
     {
-        vel_right = vel_right * (-1);
-        digitalWrite(Right_Reverse,LOW);
-      }else{
-        digitalWrite(Right_Reverse,HIGH);
-      }
-      if (vel_left < 0.0)
+        velRight = velRight * (-1);
+        digitalWrite(rightReverse,LOW);
+      }else
       {
-        vel_left = vel_left * (-1);
-        digitalWrite(Left_Reverse,LOW);
-      }else{
-        digitalWrite(Left_Reverse,HIGH);
+        digitalWrite(rightReverse,HIGH);
       }
-      if (vel_right == 0.0 & vel_left == 0.0)
+      if (velLeft < 0.0)
       {
-        digitalWrite(Right_Brake,LOW);
-        digitalWrite(Left_Brake,LOW);
-      }else{
-        digitalWrite(Right_Brake,HIGH);
-        digitalWrite(Left_Brake,HIGH);
+        velLeft = velLeft * (-1);
+        digitalWrite(leftReverse,LOW);
+      }else
+      {
+        digitalWrite(leftReverse,HIGH);
       }
-
+      if (velRight == 0.0 && velLeft == 0.0)
+      {
+        digitalWrite(rightBrake,LOW);
+        digitalWrite(leftBrake,LOW);
+      }else
+      {
+        digitalWrite(rightBrake,HIGH);
+        digitalWrite(leftBrake,HIGH);
+      }
 
       delay(10);
 
-      analogWrite(6,vel_left*0.79);
-      analogWrite(7,vel_right*0.60);
+      analogWrite(6, velLeft * maxSpeed);
+      analogWrite(7 ,velRight * maxSpeed);
   }
   
 }
-//subscriber
+// Subscriber
 ros::Subscriber<geometry_msgs::Twist> sub("cmd_vel" , CmdVelCallback);
-void setup() {
-  // put your setup code here, to run once:
-  pinMode(Hall_Right_PIN, INPUT);
-  pinMode(Hall_Left_PIN, INPUT);
-  pinMode(Right_Reverse, OUTPUT);
-  pinMode(Left_Reverse, OUTPUT);
-  pinMode(Right_Brake, OUTPUT);
-  pinMode(Left_Brake, OUTPUT);
+
+void setup() 
+{
+  // Put your setup code here, to run once:
+  pinMode(hallRightPin, INPUT);
+  pinMode(hallLeftPin, INPUT);
+  pinMode(rightReverse, OUTPUT);
+  pinMode(leftReverse, OUTPUT);
+  pinMode(rightBrake, OUTPUT);
+  pinMode(leftBrake, OUTPUT);
   pinMode(6, OUTPUT);
   pinMode(7, OUTPUT);
-
 
   nh.initNode();
   nh.subscribe(sub);
   debugSerial.begin(57600);
   ibusRC.begin(ibusRcSerial);
 }
+
 int readChannel(byte channelInput, int minLimit, int maxLimit, int defaultValue)
-  {
+{
   uint16_t ch = ibusRC.readChannel(channelInput);
   if (ch < 100) return defaultValue;
+  
   return map(ch, 1000, 2000, minLimit, maxLimit);
-  }
-void loop() {
+}
 
+void loop() 
+{
   RemoteControl();
   Odometry();
   delay(10);
