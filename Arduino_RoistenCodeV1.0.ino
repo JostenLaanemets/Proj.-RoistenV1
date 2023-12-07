@@ -1,7 +1,11 @@
 #include <IBusBM.h>
 #include <ros.h>
+#include <FastLED.h>
 #include <geometry_msgs/Twist.h>
 #define PI 3.1415926535897932384626433832795
+#define numLeds 10
+#define ledPin 53
+CRGB leds[numLeds];
 
 //IBUS
 IBusBM ibusRC;
@@ -36,6 +40,9 @@ int previousStateRight = LOW;
 int previousStateLeft = LOW;
 
 float maxSpeed=0.7;
+
+
+
 
 void CmdVelCallback( const geometry_msgs::Twist& velocity)
 {
@@ -88,8 +95,10 @@ void RemoteControl()
   if (channel5 == 100)
   {
     nh.spinOnce();
+    
   }else if (channel5 == 0)
   {
+    Leds(2);
     digitalWrite(rightBrake,LOW);
     digitalWrite(leftBrake,LOW);
   }else
@@ -118,6 +127,7 @@ void RemoteControl()
         digitalWrite(leftBrake,LOW);
       }else
       {
+        Leds(1);
         digitalWrite(rightBrake,HIGH);
         digitalWrite(leftBrake,HIGH);
       }
@@ -143,6 +153,9 @@ void setup()
   pinMode(leftBrake, OUTPUT);
   pinMode(6, OUTPUT);
   pinMode(7, OUTPUT);
+  
+  FastLED.addLeds<WS2812B, ledPin, GRB>(leds, numLeds).setCorrection(TypicalLEDStrip);
+  FastLED.setBrightness(50);
 
   nh.initNode();
   nh.subscribe(sub);
@@ -162,5 +175,6 @@ void loop()
 {
   RemoteControl();
   Odometry();
+  
   delay(10);
 }
