@@ -23,9 +23,15 @@ ros::NodeHandle nh;
 // d = Wheel diameter
 const float d = 0.25;
 
+
+
 // Variables for right and left velocities       
 float velLeft = 0;
 float velRight = 0;
+
+// Define HALL pins
+const int leftMotor = 6;
+const int rightMotor = 7;
 
 // Define HALL pins
 const int hallRightPin = 4;
@@ -39,7 +45,7 @@ const int leftBrake = 3;
 const int rightReverse = A0;
 const int leftReverse = A1;
 // Adding a limit to our output
-const float maxSpeed=0.7;
+const float maxSpeed = 0.7;
 
 
 void CmdVelCallback( const geometry_msgs::Twist& velocity)
@@ -48,17 +54,21 @@ void CmdVelCallback( const geometry_msgs::Twist& velocity)
   velRight = velocity.linear.x + d * velocity.angular.z;
   Leds(1);
   // Reverse and brake logic
-  if (velRight < 0.0){
+  if (velRight < 0.0)
+  {
     velRight = velRight * (-1);
     digitalWrite(rightReverse, LOW);
-  }else{
+  }else
+  {
     digitalWrite(rightReverse, HIGH);
   }
 
-  if (velLeft < 0.0){
+  if (velLeft < 0.0)
+  {
     velLeft = velLeft * (-1);
     digitalWrite(leftReverse, LOW);
-  }else{
+  }else
+  {
     digitalWrite(leftReverse, HIGH);
   }
 
@@ -66,8 +76,8 @@ void CmdVelCallback( const geometry_msgs::Twist& velocity)
 
   delay(10);
   // Outputing the channels to ESC
-  analogWrite(6, velLeft * maxSpeed);
-  analogWrite(7 ,velRight * maxSpeed);
+  analogWrite(leftMotor, velLeft * maxSpeed);
+  analogWrite(rightMotor, velRight * maxSpeed);
 }
 
 void RemoteControl()
@@ -114,8 +124,8 @@ void RemoteControl()
     BrakeLogic(velRight,velLeft);
     delay(10);
     // Outputing the channels to ESC
-    analogWrite(6, velLeft * maxSpeed);
-    analogWrite(7 ,velRight * maxSpeed);
+    analogWrite(leftMotor, velLeft * maxSpeed);
+    analogWrite(rightMotor, velRight * maxSpeed);
   }
   
 }
@@ -131,18 +141,22 @@ void setup()
   pinMode(leftReverse, OUTPUT);
   pinMode(rightBrake, OUTPUT);
   pinMode(leftBrake, OUTPUT);
-  pinMode(6, OUTPUT);
-  pinMode(7, OUTPUT);
+  pinMode(leftMotor, OUTPUT);
+  pinMode(rightMotor, OUTPUT);
+
   // Adding LEDstrip
   FastLED.addLeds<WS2812B, ledPin, GRB>(leds, numLeds).setCorrection(TypicalLEDStrip);
   FastLED.setBrightness(50);
+
   // Initializing node and subscribing to it
   nh.initNode();
   nh.subscribe(sub);
+
   // Starting IBUS
   debugSerial.begin(57600);
   ibusRC.begin(ibusRcSerial);
 }
+
 // Reading the channels
 int readChannel(byte channelInput, int minLimit, int maxLimit, int defaultValue)
 {
@@ -152,10 +166,12 @@ int readChannel(byte channelInput, int minLimit, int maxLimit, int defaultValue)
   return map(ch, 1000, 2000, minLimit, maxLimit);
 }
 
+
 void loop() 
 {
   RemoteControl();
   Odometry();
+
   delay(10);
 }
 

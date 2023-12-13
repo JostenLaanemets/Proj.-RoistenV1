@@ -1,9 +1,10 @@
 #include <FastLED.h>
 
 
-void Leds(int Mode) {
-  
-  switch(Mode){
+void Leds(int Mode) 
+{  
+  switch(Mode)
+  {
     // Clear all the LEDs
     case 0:
     FastLED.clear();
