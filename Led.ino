@@ -22,7 +22,12 @@ void Leds(int Mode)
       FastLED.setBrightness(100);  
       FastLED.show();
       break;
+    //Set the LEDs to green
+    case 3:
+      fill_solid(leds, numLeds,CRGB::Green);
+      FastLED.setBrightness(100);  
+      FastLED.show();
+      break;
   }
 }
-
 

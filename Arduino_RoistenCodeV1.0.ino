@@ -2,6 +2,7 @@
 #include <ros.h>
 #include <FastLED.h>
 #include <geometry_msgs/Twist.h>
+#include <std_msgs/Bool.h>
 #define  PI 3.14159
 #define numLeds 10
 #define ledPin 53
@@ -47,6 +48,20 @@ const int leftReverse = A1;
 // Adding a limit to our output
 const float maxSpeed = 0.7;
 
+bool reached = false;
+
+void LidarCallback(const std_msgs::Bool& value)
+{
+  reached = value.data;
+  if (reached)
+  {
+    Leds(1);
+    BrakeLogic(0.0, 0.0);
+  }else{
+    FastLED.clear();
+    FastLED.show();
+  }
+}
 
 void CmdVelCallback( const geometry_msgs::Twist& velocity)
 {
@@ -90,18 +105,40 @@ void RemoteControl()
   
   velLeft = channel3 + channel1+1;
   velRight = channel3 - channel1+1;
-
+  // 100 = Teleoperation
   if (channel5 == 100)
   {
+    if (reached)
+    {
+      Leds(1);
+      BrakeLogic(0.0, 0.0);
+    }else
+    {
+      BrakeLogic(0.1, 0.1);
+      Leds(3);
+    }
+    //Leds(1);
     nh.spinOnce();
-    
+  // 0 = Neutral
   }else if (channel5 == 0)
   {
-    Leds(2);
+    if (reached)
+    {
+      Leds(1);
+      BrakeLogic(0.0, 0.0);
+      //return;
+    }else
+    {
+      Leds(3);
+    }
+    //Leds(2);
     digitalWrite(rightBrake,LOW);
     digitalWrite(leftBrake,LOW);
+  // -100 = Remote control
   }else
   {
+    //problem, engine kaput, channel 5: -100 = puldi reziim, 100 = teleop reziim----------------------------------------------------------------------------------------------------------------------
+    //Leds(3);
     digitalWrite(rightBrake,HIGH);
     digitalWrite(leftBrake,HIGH);
     if (velRight < 0.0)
@@ -131,6 +168,7 @@ void RemoteControl()
 }
 // Subscriber
 ros::Subscriber<geometry_msgs::Twist> sub("cmd_vel" , CmdVelCallback);
+ros::Subscriber<std_msgs::Bool> lidar("obj_detection", LidarCallback);
 
 void setup() 
 {
@@ -151,6 +189,7 @@ void setup()
   // Initializing node and subscribing to it
   nh.initNode();
   nh.subscribe(sub);
+  nh.subscribe(lidar);
 
   // Starting IBUS
   debugSerial.begin(57600);
