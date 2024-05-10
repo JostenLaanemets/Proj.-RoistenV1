@@ -70,10 +70,6 @@ void LidarCallback(const std_msgs::Bool& value)
   if (reached)
   {
     Leds(1);
-    BrakeLogic(0.0, 0.0);
-  }else{
-    FastLED.clear();
-    FastLED.show();
   }
 }
 
@@ -81,7 +77,6 @@ void CmdVelCallback( const geometry_msgs::Twist& velocity)
 {
   velLeft = velocity.linear.x - d * velocity.angular.z;
   velRight = velocity.linear.x + d * velocity.angular.z;
-  Leds(1);
   // Reverse and brake logic
   if (velRight < 0.0)
   {
@@ -157,10 +152,7 @@ void RemoteControl()
   // -100 = Remote control
   else
   {
-    //problem, engine kaput, channel 5: -100 = puldi reziim, 100 = teleop/serial reziim----------------------------------------------------------------------------------------------------------------------
-    //Leds(3);
-    BrakeLogic(0.1, 0.1);
-
+    //problem, engine kaput, channel 5: -100 = puldi reziim, 100 = teleop/serial reziim
     if (velRight < 0.0)
     {
       velRight = velRight * (-1);
@@ -183,10 +175,11 @@ void RemoteControl()
     }
 
     BrakeLogic(velRight,velLeft);
-    delay(10);
+    //delay(10);
     // Outputing the channels to ESC
     analogWrite(leftMotor, velLeft * maxSpeed);
     analogWrite(rightMotor, velRight * maxSpeed);
+    Leds(4);
   }
 }
 

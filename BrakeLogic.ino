@@ -6,7 +6,8 @@ void BrakeLogic(float Right,float Left)
   {
     digitalWrite(rightBrake,LOW);
     digitalWrite(leftBrake,LOW);
-  }else
+  }
+  else
   {
     digitalWrite(rightBrake,HIGH);
     digitalWrite(leftBrake,HIGH);
